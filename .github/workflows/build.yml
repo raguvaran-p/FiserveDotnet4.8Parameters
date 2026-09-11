@@ -3,12 +3,12 @@ name: Build and Package Fiserve Application
 on:
   push:
     branches:
-      - dotnet-framework-4.8-nonwix-msi-ci
+      - clone-dotnet-framework-4.8-nonwix-msi-ci
 
   workflow_dispatch:
   
 permissions:
-  contents: read
+  contents: write
   
 jobs:
   build-publish:
@@ -35,10 +35,10 @@ jobs:
       # 2. Setup .NET
       # ==========================================================
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
+      #- name: Setup .NET 10
+           # uses: actions/setup-dotnet@v4
+            #with:
+              #dotnet-version: 10.0.x
 
 
       # ==========================================================
@@ -124,7 +124,7 @@ jobs:
 
 
       # ==========================================================
-      # 7. Create ZIP from published output
+      # 7. Create ZIP inside Artifact folder
       # ==========================================================
 
       - name: Create ZIP
@@ -134,10 +134,28 @@ jobs:
             $env:GITHUB_WORKSPACE `
             "publish"
 
-          $zipPath = Join-Path `
+          $artifactDirectory = Join-Path `
             $env:GITHUB_WORKSPACE `
+            "Artifact"
+
+          $zipPath = Join-Path `
+            $artifactDirectory `
             "FiserveApplication.zip"
 
+          # Create Artifact folder
+          if (Test-Path $artifactDirectory) {
+            Remove-Item `
+              $artifactDirectory `
+              -Recurse `
+              -Force
+          }
+
+          New-Item `
+            -ItemType Directory `
+            -Path $artifactDirectory `
+            -Force | Out-Null
+
+          # Create ZIP directly inside Artifact
           Compress-Archive `
             -Path "$publishDirectory\*" `
             -DestinationPath $zipPath `
@@ -147,6 +165,8 @@ jobs:
             throw "ZIP file was not created."
           }
 
+          Write-Host "ZIP created successfully:"
+          Write-Host $zipPath
 
       # ==========================================================
       # 8. Upload ZIP artifact
@@ -156,11 +176,31 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FiserveApplication
-          path: FiserveApplication.zip
+          path: Artifact/FiserveApplication.zip
           if-no-files-found: error
 
       # ==========================================================
-      # 9. Upload ZIP to Azure Blob Storage
+      # 9. Commit ZIP into Artifact folder in GitHub branch
+      # ==========================================================
+
+      - name: Commit ZIP to Artifact folder
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add Artifact/FiserveApplication.zip
+
+          if (git diff --cached --quiet) {
+            Write-Host "No changes to commit."
+          }
+          else {
+            git commit -m "Add FiserveApplication ZIP artifact"
+            git push
+          }    
+
+      # ==========================================================
+      # 10. Upload ZIP to Azure Blob Storage
       # ==========================================================
 
       - name: Upload ZIP to Azure Storage
@@ -173,12 +213,12 @@ jobs:
             --account-key "$env:AZURE_STORAGE_ACCOUNT_KEY" `
             --container-name "harnesscontainer" `
             --name "FiserveApplication.zip" `
-            --file "$env:GITHUB_WORKSPACE\FiserveApplication.zip" `
+            --file "$env:GITHUB_WORKSPACE\Artifact\FiserveApplication.zip" `
             --auth-mode key `
             --overwrite true
 
       # ==========================================================
-      # 10. Trigger Harness CD
+      # 11. Trigger Harness CD
       # ==========================================================
 
       - name: Trigger Harness CD
