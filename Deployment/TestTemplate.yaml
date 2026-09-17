@@ -32,6 +32,7 @@ template:
                     type: Command
                     name: CloneGitHubRepo
                     identifier: CloneGitHubRepo
+                    timeout: 10m
                     spec:
                       onDelegate: false
                       commandUnits:
@@ -45,7 +46,6 @@ template:
                               spec:
                                 script: |
                                   git clone --depth 1 --branch clone-dotnet-framework-4.8-nonwix-msi-ci https://github.com/raguvaran-p/FiserveDotnetFrameworkTest C:\temp\repo
-                    timeout: 10m
                     failureStrategies:
                       - onFailure:
                           errors:
@@ -67,6 +67,7 @@ template:
                     type: Command
                     name: CopyFileToAzureVM
                     identifier: CopyFileToAzureVM
+                    timeout: 10m
                     spec:
                       onDelegate: false
                       commandUnits:
@@ -88,7 +89,6 @@ template:
                                   Copy-Item "C:\temp\repo\Artifact\*.zip" -Destination "C:\temp\github_files1\" -Force
 
                                   Write-Host "File copied successfully to C:\temp\github_files1\"
-                    timeout: 10m
                     failureStrategies:
                       - onFailure:
                           errors:
@@ -110,6 +110,7 @@ template:
                     type: Command
                     name: ExtractToIIS
                     identifier: ExtractToIIS
+                    timeout: 10m
                     spec:
                       onDelegate: false
                       commandUnits:
@@ -156,30 +157,30 @@ template:
 
                                   Write-Host "Contents of $extractPath :"
                                   Get-ChildItem -Path $extractPath | Format-Table Name, Length, LastWriteTime
-                      timeout: 10m
-                      failureStrategies:
-                        - onFailure:
-                            errors:
-                              - AllErrors
-                            action:
-                              type: Retry
-                              spec:
-                                retryCount: 3
-                                retryIntervals:
-                                  - 30s
-                                  - 1m
-                                  - 2m
-                                onRetryFailure:
-                                  action:
-                                    type: MarkAsFailure
-                      strategy:
-                        repeat:
-                          items: <+stage.output.hosts>
+                    failureStrategies:
+                      - onFailure:
+                          errors:
+                            - AllErrors
+                          action:
+                            type: Retry
+                            spec:
+                              retryCount: 3
+                              retryIntervals:
+                                - 30s
+                                - 1m
+                                - 2m
+                              onRetryFailure:
+                                action:
+                                  type: MarkAsFailure
+                    strategy:
+                      repeat:
+                        items: <+stage.output.hosts>
 
                 - step:
                     type: Command
                     name: ConfigureIISWebsite
                     identifier: ConfigureIISWebsite
+                    timeout: 10m
                     spec:
                       onDelegate: false
                       commandUnits:
@@ -263,25 +264,24 @@ template:
                                   Write-Host "IIS Website configured successfully!"
                                   Write-Host "Access URL: http://localhost:$port"
                                   Write-Host "=========================================="
-                      timeout: 10m
-                      failureStrategies:
-                        - onFailure:
-                            errors:
-                              - AllErrors
-                            action:
-                              type: Retry
-                              spec:
-                                retryCount: 2
-                                retryIntervals:
-                                  - 30s
-                                onRetryFailure:
-                                  action:
-                                    type: MarkAsFailure
-                      strategy:
-                        repeat:
-                          items: <+stage.output.hosts>
+                    failureStrategies:
+                      - onFailure:
+                          errors:
+                            - AllErrors
+                          action:
+                            type: Retry
+                            spec:
+                              retryCount: 2
+                              retryIntervals:
+                                - 30s
+                              onRetryFailure:
+                                action:
+                                  type: MarkAsFailure
+                    strategy:
+                      repeat:
+                        items: <+stage.output.hosts>
 
-            rollbackSteps: []
+              rollbackSteps: []
 
           failureStrategies:
             - onFailure:
