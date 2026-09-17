@@ -1,47 +1,96 @@
 template:
-  name: TestTemplate
-  identifier: TestTemplate
+  name: Templatefx
+  identifier: templatefx
   versionLabel: v1
   type: Pipeline
-  projectIdentifier: ProjectTemplateTest
+  projectIdentifier: FrameworkDeployment
   orgIdentifier: default
   tags: {}
   spec:
     stages:
       - stage:
-          name: deploydev
-          identifier: deploydev
+          name: DeployDotNetFramework48
+          identifier: deployDotNetFramework48
           type: Deployment
           spec:
-            deploymentType: Kubernetes
+            deploymentType: WinRm
+
             service:
-              serviceRef: dotnetcoreservice
+              serviceRef: Fiserve_Windows_Service
+
             environment:
-              environmentRef: aksdev
+              environmentRef: AzureVMEnv
               deployToAll: false
               infrastructureDefinitions:
-                - identifier: aksinfra
+                - identifier: AzureVMInfra
+
             execution:
               steps:
                 - step:
-                    name: Rollout Deployment
-                    identifier: rolloutDeployment
-                    type: K8sRollingDeploy
+                    name: Deploy Fiserve Application
+                    identifier: deployFiserveApplication
+                    type: Command
                     timeout: 10m
                     spec:
-                      skipDryRun: false
-                      pruningEnabled: false
+                      onDelegate: true
+                      environmentVariables: {}
+                      outputVariables: {}
+                      command: |-
+                        Write-Host "Starting Fiserve .NET Framework 4.8 deployment"
+
+                        $zipFile = "C:\FiserveApplication.zip"
+                        $deployPath = "C:\inetpub\wwwroot\deploy1"
+
+                        Write-Host "ZIP file: $zipFile"
+                        Write-Host "Deployment path: $deployPath"
+
+                        if (!(Test-Path $zipFile)) {
+                            Write-Error "FiserveApplication.zip not found at $zipFile"
+                            exit 1
+                        }
+
+                        if (Test-Path $deployPath) {
+                            Write-Host "Removing existing deployment directory..."
+                            Remove-Item $deployPath -Recurse -Force
+                        }
+
+                        New-Item -ItemType Directory -Path $deployPath -Force | Out-Null
+
+                        Write-Host "Extracting application ZIP..."
+                        Expand-Archive -Path $zipFile -DestinationPath $deployPath -Force
+
+                        Write-Host "Deployment files extracted successfully."
+
+                        Write-Host "Restarting IIS..."
+                        iisreset
+
+                        Write-Host "IIS restart completed."
+
+                        if (Test-Path $deployPath) {
+                            Write-Host "Deployment validation successful."
+                        }
+                        else {
+                            Write-Error "Deployment directory was not created."
+                            exit 1
+                        }
+
           failureStrategies:
             - onFailure:
                 errors:
                   - AllErrors
                 action:
                   type: StageRollback
+
           rollbackSteps:
             - step:
-                name: Rollback Rollout Deployment
-                identifier: rollbackRolloutDeployment
-                type: K8sRollingRollback
+                name: Rollback Fiserve Application
+                identifier: rollbackFiserveApplication
+                type: Command
                 timeout: 10m
                 spec:
-                  pruningEnabled: false
+                  onDelegate: true
+                  environmentVariables: {}
+                  outputVariables: {}
+                  command: |-
+                    Write-Host "Rollback requested."
+                    Write-Host "Rollback logic should restore the previous IIS deployment."
