@@ -1,6 +1,6 @@
 template:
-  name: templateInvoke1
-  identifier: templateInvoke1
+  name: parameterInvoke
+  identifier: parameterInvoke
   versionLabel: v2
   type: Pipeline
   projectIdentifier: FrameworkDeployment
