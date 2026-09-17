@@ -13,7 +13,7 @@ template:
 
       - name: gitBranch
         type: String
-        default: template-dotnet4.8
+        default: parameters_v2
 
       - name: artifactName
         type: String
