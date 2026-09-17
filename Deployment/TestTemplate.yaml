@@ -1,6 +1,6 @@
 template:
-  name: Templatefx
-  identifier: templatefx
+  name: templateInvoke
+  identifier: templateInvoke
   versionLabel: v1
   type: Pipeline
   projectIdentifier: FrameworkDeployment
