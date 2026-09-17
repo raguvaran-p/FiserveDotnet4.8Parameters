@@ -82,13 +82,13 @@ template:
                                 script: |
                                   Write-Host "Copying file on Azure VM..."
 
-                                  if (-not (Test-Path "C:\temp\github_files1")) {
-                                      New-Item -ItemType Directory -Path "C:\temp\github_files1" -Force
+                                  if (-not (Test-Path "C:\temp\github_files2")) {
+                                      New-Item -ItemType Directory -Path "C:\temp\github_files2" -Force
                                   }
 
-                                  Copy-Item "C:\temp\repo\Artifact\*.zip" -Destination "C:\temp\github_files1\" -Force
+                                  Copy-Item "C:\temp\repo\Artifact\*.zip" -Destination "C:\temp\github_files2\" -Force
 
-                                  Write-Host "File copied successfully to C:\temp\github_files1\"
+                                  Write-Host "File copied successfully to C:\temp\github_files2\"
                     failureStrategies:
                       - onFailure:
                           errors:
