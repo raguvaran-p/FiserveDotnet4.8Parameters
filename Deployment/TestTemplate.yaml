@@ -45,7 +45,7 @@ template:
                               type: Inline
                               spec:
                                 script: |
-                                  git clone --depth 1 --branch clone-dotnet-framework-4.8-nonwix-msi-ci https://github.com/raguvaran-p/FiserveDotnetFrameworkTest C:\temp\repo
+                                  git clone --depth 1 --branch template-dotnetfx4.8 https://github.com/raguvaran-p/FiserveDotnetFrameworkTest C:\temp\repo
                     failureStrategies:
                       - onFailure:
                           errors:
