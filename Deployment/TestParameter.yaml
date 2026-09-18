@@ -1,4 +1,3 @@
-```yaml
 template:
   name: parameterInvoke
   identifier: parameterInvoke
@@ -521,4 +520,3 @@ template:
                   - AllErrors
                 action:
                   type: StageRollback
-```
